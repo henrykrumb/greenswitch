@@ -32,11 +32,21 @@ class ESLEvent(object):
         data = data.strip().splitlines()
         last_key = None
         value = ''
+        # continuation is set if we have a multiline variable.
+        # credits: https://github.com/diasbruno/greenswitch/commit/5bb176138802109090bb620d16a0d6d3e141bb5c
+        continuation = False
         for line in data:
+            empty_line = len(line) == 0
             if ': ' in line:
                 key, value = line.split(': ', 1)
                 last_key = key
+            elif empty_line and not continuation:
+                return
+            elif empty_line and continuation:
+                continuation = False
+                continue
             else:
+                continuation = True
                 key = last_key
                 value += '\n' + line
             self.headers[key.strip()] = value.strip()
